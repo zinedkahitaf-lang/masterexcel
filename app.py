@@ -144,9 +144,6 @@ else:
             st.chat_message("user").write(msg["content"])
         else:
             st.chat_message("assistant", avatar="🟢").write(msg["content"])
-            if "code" in msg:
-                with st.expander("🛠 AI'ın Yazdığı OpenPyXL Kodunu İncele"):
-                    st.code(msg["code"], language="python")
 
     user_query = st.chat_input("Hücre rengi değiştirme, Matematiksel Excel formülü hesaplamaları, Sütun silme vb. söyleyin.")
     
@@ -159,7 +156,7 @@ else:
         st.chat_message("user").write(user_query)
         
         with st.chat_message("assistant", avatar="🟢"):
-            with st.spinner("AI Dosyayı Analiz Ediyor, Formülleri işliyor... 🚀"):
+            with st.spinner("İşlem yapılıyor..."):
                 # Excel bağlamını alma
                 try:
                     wb_temp = openpyxl.load_workbook(WORKSPACE_FILE)
