@@ -49,8 +49,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🟢 Yapay Zeka Excel Uzmanı")
-st.markdown("Gerçek Excel dosyaları üretir. Hücre boyama, toplama-çıkarma **formülleri** ve profesyonel analizler.")
+st.markdown("<h3 style='color: #047857; font-weight: bold;'>Not: Bu Uygulama İş Güvenliği Uzmanı Fatih AKDENİZ tarafından geliştirilmiştir.</h3>", unsafe_allow_html=True)
 
 # --- API KEY ALANI ---
 try:
@@ -58,13 +57,7 @@ try:
 except:
     api_key = os.environ.get("OPENAI_API_KEY")
 
-st.sidebar.divider()
-st.sidebar.markdown(
-    "💡 **İpuçları:**\n"
-    "- 'Maaş ile primi toplayıp Toplam sütununa excel formülü olarak yaz.'\n"
-    "- 'B sütununu yeşile boya.'\n"
-    "- '100'den büyük hücreleri bul ve kalın yap.'"
-)
+
 
 # --- APP STATE & FILES ---
 WORKSPACE_FILE = "workspace_excel.xlsx"
