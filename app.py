@@ -190,7 +190,7 @@ else:
                 GÖREVİN: Kullanıcının isteğini anlayıp, bunu excel katmanında GERÇEK FORMÜLLER (=EĞER, =VLOOKUP vb.), profesyonel renklendirmeler ve sütun organizasyonları ile native (kalıcı) şekilde uygulayan, HATASIZ çalışan bir Python kodu yazmak.
                 
                 ALTIN KURALLAR (HATA YAPARSAN SİSTEM ÇÖKER):
-                1. Kodu asla markdown (```python ... ```) içine alma! YALNIZCA SAF PYTHON KODU DÖNDÜR.
+                1. DÖNDÜRECEĞİN YANIT KESİNLİKLE JSON FORMATINDA OLMALIDIR. (Örn: {{"code": "import openpyxl\\n..."}})
                 2. Çalışmaya `import openpyxl` ve `from openpyxl.styles import PatternFill, Font, Alignment, Border, Side` vb. ile başla.
                 3. Dosyayı `wb = openpyxl.load_workbook('{WORKSPACE_FILE}')` ile aç ve `ws = wb.active` ile aktif sayfasını seç. 
                 4. Kullanıcı Matematiksel, İstatistiksel veya Koşullu bir işlem isterse bunu Excel Formülü (`=SUM(A2:B2)`, `=IF(...)`) olarak hücreye yaz ki dosya indirildiğinde Excel'de değiştirilebilir olsun! 
@@ -210,30 +210,35 @@ else:
                 """
                 
                 try:
+                    import json
                     client = OpenAI(api_key=api_key)
                     response = client.chat.completions.create(
                         model="gpt-4o",
+                        response_format={ "type": "json_object" },
                         messages=[
-                            {"role": "system", "content": system_prompt},
+                            {"role": "system", "content": system_prompt + "\n\nLÜTFEN yanıtını { \"code\": \"yazdığın python kodu buraya\" } formatında JSON objesi olarak ver. Markdown kullanma."},
                             {"role": "user", "content": user_query}
                         ],
                         temperature=0
                     )
                     
-                    code_string = response.choices[0].message.content.strip()
-                    
-                    # LLM inat edip markdown yazarsa diye güvenlik filtresi (Regex ile ayıklama):
-                    import re
-                    pattern = r"```(?:python)?\s*(.*?)\s*```"
-                    match = re.search(pattern, code_string, re.DOTALL)
-                    if match:
-                        code_string = match.group(1).strip()
-                    else:
-                        code_string = code_string.strip()
+                    response_text = response.choices[0].message.content.strip()
+                    try:
+                        import json
+                        parsed_json = json.loads(response_text)
+                        code_string = parsed_json.get("code", "")
+                    except:
+                        code_string = response_text # Fallback
+                        
+                    code_string = code_string.strip()
+                    if code_string.startswith("```python"):
+                        code_string = code_string[9:]
+                    elif code_string.startswith("```"):
+                        code_string = code_string[3:]
+                    if code_string.endswith("```"):
+                        code_string = code_string[:-3]
                         
                     # İKİNCİ KATI GÜVENLİK FİLTRESİ: 
-                    # Eğet AI hala sohbet metni yazdıysa ve markdown kullanmadıysa, 
-                    # "import" kelimesinden önceki her şeyi kes at.
                     if "import openpyxl" in code_string:
                         code_string = code_string[code_string.find("import openpyxl"):]
                     
