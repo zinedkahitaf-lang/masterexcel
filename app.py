@@ -224,13 +224,18 @@ else:
                     
                     # LLM inat edip markdown yazarsa diye güvenlik filtresi (Regex ile ayıklama):
                     import re
-                    # İçinde python block veya sadece kod barındıran kısımları arayalım
                     pattern = r"```(?:python)?\s*(.*?)\s*```"
                     match = re.search(pattern, code_string, re.DOTALL)
                     if match:
                         code_string = match.group(1).strip()
                     else:
                         code_string = code_string.strip()
+                        
+                    # İKİNCİ KATI GÜVENLİK FİLTRESİ: 
+                    # Eğet AI hala sohbet metni yazdıysa ve markdown kullanmadıysa, 
+                    # "import" kelimesinden önceki her şeyi kes at.
+                    if "import openpyxl" in code_string:
+                        code_string = code_string[code_string.find("import openpyxl"):]
                     
                     # Güvenli ortamda Çalıştırma
                     try:
