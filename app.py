@@ -125,7 +125,7 @@ else:
             st.download_button(
                 label="📥 İndir (Gerçek Formüllerle)",
                 data=f,
-                file_name="Ai_Duzenlenmis_Umarim_Son.xlsx",
+                file_name="Excel_Duzenlendi.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 use_container_width=True
             )
