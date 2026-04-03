@@ -53,9 +53,10 @@ st.title("🟢 Yapay Zeka Excel Uzmanı")
 st.markdown("Gerçek Excel dosyaları üretir. Hücre boyama, toplama-çıkarma **formülleri** ve profesyonel analizler.")
 
 # --- API KEY ALANI ---
-api_key = st.sidebar.text_input("🔑 OpenAI API Anahtarı:", type="password", placeholder="sk-...")
-if not api_key:
-    st.sidebar.warning("Lütfen işlem yapabilmek için API anahtarınızı girin.")
+try:
+    api_key = st.secrets["OPENAI_API_KEY"]
+except:
+    api_key = os.environ.get("OPENAI_API_KEY")
 
 st.sidebar.divider()
 st.sidebar.markdown(
@@ -158,7 +159,7 @@ else:
     
     if user_query:
         if not api_key:
-            st.error("Lütfen işlemi yürütebilmem için sol taraftan OpenAI API anahtarınızı giriniz.")
+            st.error("Sistem Yapılandırma Hatası: OpenAI API Anahtarı sunucuya eklenmemiş.")
             st.stop()
             
         st.session_state["messages"].append({"role": "user", "content": user_query})
