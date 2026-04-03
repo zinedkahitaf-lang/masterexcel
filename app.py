@@ -189,21 +189,25 @@ else:
                 
                 GÖREVİN: Kullanıcının isteğini anlayıp, bunu excel katmanında GERÇEK FORMÜLLER (=EĞER, =VLOOKUP vb.), profesyonel renklendirmeler ve sütun organizasyonları ile native (kalıcı) şekilde uygulayan, HATASIZ çalışan bir Python kodu yazmak.
                 
-                ALTIN KURALLAR (HATA YAPARSAN SİSTEM ÇÖKER):
+                ALTIN KURALLAR VE HATA YAKALAMA (ÇÖKMEYİ ENGELLE):
                 1. DÖNDÜRECEĞİN YANIT KESİNLİKLE JSON FORMATINDA OLMALIDIR. (Örn: {{"code": "import openpyxl\\n..."}})
-                2. Çalışmaya `import openpyxl` ve `from openpyxl.styles import PatternFill, Font, Alignment, Border, Side` vb. ile başla.
-                3. Dosyayı `wb = openpyxl.load_workbook('{WORKSPACE_FILE}')` ile aç ve `ws = wb.active` ile aktif sayfasını seç. 
-                4. Kullanıcı Matematiksel, İstatistiksel veya Koşullu bir işlem isterse bunu Excel Formülü (`=SUM(A2:B2)`, `=IF(...)`) olarak hücreye yaz ki dosya indirildiğinde Excel'de değiştirilebilir olsun! 
-                5. MergedCell (Birleşik Hücre) Koruması: Hücreleri döngüyle tararken: `if type(ws.cell(r, c)).__name__ == 'MergedCell': continue` KESİNLİKLE UYGULA! (İSG tabloları vb. için hayatidir).
-                6. ZAMAN SINIRLAMASI: Binlerce satırlık tablolarda `max_row` bazen milyonlar gösterebilir. Satırların boş olup olmadığını test et. Atıyorum üst üste 10 satır tamamen None ise `break` ile döngüyü erkenden bitir (Optimizasyon dehası ol).
+                2. Çalışmaya `import openpyxl` ile başla.
+                3. Dosyayı `wb = openpyxl.load_workbook('{WORKSPACE_FILE}')` ile aç ve `ws = wb.active` yap.
+                4. MergedCell (Birleşik Hücre) Koruması (KRİTİK): İSG veya benzeri dosyalarda çok fazla "MergedCell" (birleşik hücre) bulunur. Bunların .value veya .fill değerini doğrudan değiştirmeye çalışmak "AttributeError: 'MergedCell' object attribute 'value' is read-only" hatasına yol açarak SİSTEMİ ÇÖKERTİR!
+                   Bunu engellemek için, hücrelere değer atarken veya stil verirken her zaman KAPSAMLI bir try-except bloğu KULLAN!
+                   Örnek Güvenli Kod:
+                   ```python
+                   for row in range(2, ws.max_row + 1):
+                       try:
+                           ws[f'A{{row}}'].value = "Bir Değer"
+                           ws[f'B{{row}}'].fill = PatternFill(...)
+                       except AttributeError:
+                           pass # MergedCell ise görmezden gel ve atla
+                   ```
+                5. Koşullu bir işlem varsa, bunu doğrudan Excel'in anlayacağı `=` ile başlayan metin formülleri (`=SUM(...)`, `=IF(...)` vb.) yazarak yap ki Excel native formülü olsun.
+                6. ZAMAN SINIRLAMASI: Tablonun bittiğini kontrol et. 10 satır üst üste `None` gelirse `break` yap ki 1 milyon satır döngüsü kitlenmesin.
                 7. EN SONA MUTLAKA `wb.save('{WORKSPACE_FILE}')` YAZ!
-                8. HİÇBİR ZAMAN dosya indirme tetikleme vs. yapma, `print` dahi KULLANMA.
-                9. Buton (Macro, Form Control) EKLENEMEZ! Bunları açıkça reddetme, hücreyi butonmuş gibi (örn boyayıp) geçiştirebilirsin ama sahte openpyxl widget modülleri icat etme.
-                10. Sütun harflerini bulmak için `from openpyxl.utils import get_column_letter` kullanmayı unutma.
-                
-                EXCEL UZMANLIĞI KALİTE TESTİ:
-                - Kullanıcı "Risk Skoru sütununa ofş'leri çarp" diyorsa, =B2*C2*D2 formülünü sadece veri olan satırlara döngüyle doğru şekilde uygula.
-                - Kullanıcı "Tabloyu güzelleştir" diyorsa; başlıkları koyu yap, arkaplanı renklendir, Alignment ile ortaya daya, kolon genişliklerini (`ws.column_dimensions['A'].width = 15` gibi) otomatik ayarla.
+                8. HİÇBİR ZAMAN dosya indirme fonskiyonu (örn io vb) yazma, `print` KULLANMA, UI bileşeni ekleme.
                 
                 SANA SUNULAN EXCEL TABLO BAĞLAMI:
                 {context}
