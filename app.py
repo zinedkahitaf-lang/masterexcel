@@ -222,16 +222,15 @@ else:
                     
                     code_string = response.choices[0].message.content.strip()
                     
-                    # LLM inat edip markdown yazarsa diye güvenlik filtresi:
-                    if code_string.startswith("```python"):
-                        code_string = code_string[9:]
-                    elif code_string.startswith("```"):
-                        code_string = code_string[3:]
-                        
-                    if code_string.endswith("```"):
-                        code_string = code_string[:-3]
-                        
-                    code_string = code_string.strip()
+                    # LLM inat edip markdown yazarsa diye güvenlik filtresi (Regex ile ayıklama):
+                    import re
+                    # İçinde python block veya sadece kod barındıran kısımları arayalım
+                    pattern = r"```(?:python)?\s*(.*?)\s*```"
+                    match = re.search(pattern, code_string, re.DOTALL)
+                    if match:
+                        code_string = match.group(1).strip()
+                    else:
+                        code_string = code_string.strip()
                     
                     # Güvenli ortamda Çalıştırma
                     try:
