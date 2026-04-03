@@ -168,42 +168,44 @@ else:
                     max_col = ws_temp.max_column
                     
                     sample_data = []
-                    for row in ws_temp.iter_rows(min_row=1, max_row=min(max_row, 10), values_only=True):
+                    for row in ws_temp.iter_rows(min_row=1, max_row=min(max_row, 15), values_only=True):
                         sample_data.append(row)
                         
                     context = f"""
-                    MEVCUT EXCEL DOSYASI:
-                    - Satır Sayısı: {max_row}
-                    - Sütun Sayısı: {max_col}
-                    - İlk {min(max_row, 10)} Satır Verisi (Başlıklar genellikle ilk birkaç satırda yer alır):
+                    MEVCUT EXCEL DOSYASI (SEKME: {ws_temp.title}):
+                    - Satır Sayısı: {max_row} | Sütun Sayısı: {max_col}
+                    - İlk {min(max_row, 15)} Satır Verisi:
                     {sample_data}
                     
-                    ÖNEMLİ: Tablonun nerede başladığını bu verilere bakarak anla ve başlık satırlarını işlemden dışla.
+                    ÖNEMLİ: Tablonun gerçek başlıklarının (Header) hangi satırda olduğunu bu verilere bakarak analiz et. Başlık satırından sonraki satırlarda işlem yap!
                     """
                 except Exception as e:
                     context = f"Veriler okunamadı. Hata: {e}"
 
                 system_prompt = f"""
-                Sen İLERİ DÜZEY Bir Excel ve Python OpenPyXL Uzmanısın!
-                Kesinlikle 'pandas' kütüphanesini KULLANMA. Aksi belirtilmedikçe Tüm işlemleri 'openpyxl' kullanarak mevcut excel dosyası üzerinde gerçekleştireceksin.
+                Sen DÜNYA ÇAPINDA BAŞARILI, İLERİ DÜZEY BİR EXCEL ve PYTHON 'openpyxl' UZMANISIN! 
+                Müşteriler, bir işlemi mükemmel yapan, karmaşık durumları dahi hatasız çözen aşırı profesyonel sistemlere ihtiyaç duyarlar. Sen tam olarak busun.
+                Aksi belirtilmedikçe tüm işlemleri 'openpyxl' ile MEVCUT excel dosyası üzerinde gerçekleştireceksin. 
                 
-                GÖREVİN: Kullanıcının isteğini yerine getiren SAF, çalıştırılabilir PYTHON ('openpyxl' kullanarak) kodunu yazmaktır.
+                GÖREVİN: Kullanıcının isteğini anlayıp, bunu excel katmanında GERÇEK FORMÜLLER (=EĞER, =VLOOKUP vb.), profesyonel renklendirmeler ve sütun organizasyonları ile native (kalıcı) şekilde uygulayan, HATASIZ çalışan bir Python kodu yazmak.
                 
-                ZORUNLU KURALLAR:
-                1. Hiçbir zaman kodu markdown block (```python) içine ALMA. Yalnızca salt harfiyen Python komutlarını yaz. 
-                2. Kodun EN BAŞINA 'import openpyxl' ve 'from openpyxl.styles import PatternFill, Font, Alignment' yaz.
-                3. Mutlaka Excel'i aç: `wb = openpyxl.load_workbook("{WORKSPACE_FILE}")`
-                4. Aktif sayfayı al: `ws = wb.active`
-                5. Hücrelere formül veya değer atarken MergedCell (Birleşik Hücre) hatası almamak için mutlaka hücrenin birleşik olup olmadığını kontrol et. (Örnek: `if type(ws.cell(r, c)).__name__ == 'MergedCell': continue`)
-                6. Döngülerde sadece dolu satırlara kadar ilerle. max_row çok büyük olabilir, eğer veriler bittiyse (örn art arda 5 satır None geldiyse) döngüyü `break` ile kır.
-                7. Kodun EN SONUNA HER ZAMAN `wb.save("{WORKSPACE_FILE}")` satırını ekle! (ZORUNLU!!! Yoksa tablo güncellenmez)
-                8. Print kullanma. Dosya ve ağlara erişme.
+                ALTIN KURALLAR (HATA YAPARSAN SİSTEM ÇÖKER):
+                1. Kodu asla markdown (```python ... ```) içine alma! YALNIZCA SAF PYTHON KODU DÖNDÜR.
+                2. Çalışmaya `import openpyxl` ve `from openpyxl.styles import PatternFill, Font, Alignment, Border, Side` vb. ile başla.
+                3. Dosyayı `wb = openpyxl.load_workbook('{WORKSPACE_FILE}')` ile aç ve `ws = wb.active` ile aktif sayfasını seç. 
+                4. Kullanıcı Matematiksel, İstatistiksel veya Koşullu bir işlem isterse bunu Excel Formülü (`=SUM(A2:B2)`, `=IF(...)`) olarak hücreye yaz ki dosya indirildiğinde Excel'de değiştirilebilir olsun! 
+                5. MergedCell (Birleşik Hücre) Koruması: Hücreleri döngüyle tararken: `if type(ws.cell(r, c)).__name__ == 'MergedCell': continue` KESİNLİKLE UYGULA! (İSG tabloları vb. için hayatidir).
+                6. ZAMAN SINIRLAMASI: Binlerce satırlık tablolarda `max_row` bazen milyonlar gösterebilir. Satırların boş olup olmadığını test et. Atıyorum üst üste 10 satır tamamen None ise `break` ile döngüyü erkenden bitir (Optimizasyon dehası ol).
+                7. EN SONA MUTLAKA `wb.save('{WORKSPACE_FILE}')` YAZ!
+                8. HİÇBİR ZAMAN dosya indirme tetikleme vs. yapma, `print` dahi KULLANMA.
+                9. Buton (Macro, Form Control) EKLENEMEZ! Bunları açıkça reddetme, hücreyi butonmuş gibi (örn boyayıp) geçiştirebilirsin ama sahte openpyxl widget modülleri icat etme.
+                10. Sütun harflerini bulmak için `from openpyxl.utils import get_column_letter` kullanmayı unutma.
                 
-                KRİTİK UYARI - YAPILAMAYACAKLAR:
-                - Openpyxl HİÇBİR ZAMAN Excel dosyasına tıklanabilir bir buton, kontrol (ComboBox, Button) veya Makro (VBA) EKLEYEMEZ. Buton/Hesaplama isteği gelirse hücre içine excel formülü `=A1+B1` falan yaz.
-                - Bilmediğin openpyxl attribute'larını veya sınıflarını uydurma.
+                EXCEL UZMANLIĞI KALİTE TESTİ:
+                - Kullanıcı "Risk Skoru sütununa ofş'leri çarp" diyorsa, =B2*C2*D2 formülünü sadece veri olan satırlara döngüyle doğru şekilde uygula.
+                - Kullanıcı "Tabloyu güzelleştir" diyorsa; başlıkları koyu yap, arkaplanı renklendir, Alignment ile ortaya daya, kolon genişliklerini (`ws.column_dimensions['A'].width = 15` gibi) otomatik ayarla.
                 
-                DOSYA BİLGİSİ:
+                SANA SUNULAN EXCEL TABLO BAĞLAMI:
                 {context}
                 """
                 
