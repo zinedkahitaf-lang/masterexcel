@@ -168,17 +168,17 @@ else:
                     max_col = ws_temp.max_column
                     
                     sample_data = []
-                    for row in ws_temp.iter_rows(min_row=1, max_row=min(max_row, 3), values_only=True):
+                    for row in ws_temp.iter_rows(min_row=1, max_row=min(max_row, 10), values_only=True):
                         sample_data.append(row)
                         
                     context = f"""
                     MEVCUT EXCEL DOSYASI:
                     - Satır Sayısı: {max_row}
                     - Sütun Sayısı: {max_col}
-                    - İlk {min(max_row, 3)} Satır Verisi:
+                    - İlk {min(max_row, 10)} Satır Verisi (Başlıklar genellikle ilk birkaç satırda yer alır):
                     {sample_data}
                     
-                    ÖNEMLİ: İlk satır genellikle başlıkları içerir (1. satır).
+                    ÖNEMLİ: Tablonun nerede başladığını bu verilere bakarak anla ve başlık satırlarını işlemden dışla.
                     """
                 except Exception as e:
                     context = f"Veriler okunamadı. Hata: {e}"
@@ -191,17 +191,17 @@ else:
                 
                 ZORUNLU KURALLAR:
                 1. Hiçbir zaman kodu markdown block (```python) içine ALMA. Yalnızca salt harfiyen Python komutlarını yaz. 
-                2. Kodun EN BAŞINA 'import openpyxl' yaz. (Gerekiyorsa: 'from openpyxl.styles import PatternFill, Font')
+                2. Kodun EN BAŞINA 'import openpyxl' ve 'from openpyxl.styles import PatternFill, Font, Alignment' yaz.
                 3. Mutlaka Excel'i aç: `wb = openpyxl.load_workbook("{WORKSPACE_FILE}")`
                 4. Aktif sayfayı al: `ws = wb.active`
-                5. İstekleri hücre bazlı yap. Excel Formülü işleteceksen `=B2*C2` şeklinde metin olarak `ws['D2'] = "=B2*C2"` vs yaz.
-                6. Mutlaka iteratif satır işlemlerinde, döngünün 2'den başladığından (for r in range(2, ws.max_row + 1):) ve başlık satırına dokunmadığından emin ol.
-                7. Kodun EN SONUNA HER ZAMAN `wb.save("{WORKSPACE_FILE}")` satırını ekle!
-                8. Print gibi fonksiyonlar kullanma. Güvenlik için bilgisayardaki diğer hiçbir dosya veya yola erişme!
+                5. Hücrelere formül veya değer atarken MergedCell (Birleşik Hücre) hatası almamak için mutlaka hücrenin birleşik olup olmadığını kontrol et. (Örnek: `if type(ws.cell(r, c)).__name__ == 'MergedCell': continue`)
+                6. Döngülerde sadece dolu satırlara kadar ilerle. max_row çok büyük olabilir, eğer veriler bittiyse (örn art arda 5 satır None geldiyse) döngüyü `break` ile kır.
+                7. Kodun EN SONUNA HER ZAMAN `wb.save("{WORKSPACE_FILE}")` satırını ekle! (ZORUNLU!!! Yoksa tablo güncellenmez)
+                8. Print kullanma. Dosya ve ağlara erişme.
                 
                 KRİTİK UYARI - YAPILAMAYACAKLAR:
-                - Openpyxl HİÇBİR ZAMAN Excel dosyasına tıklanabilir bir buton, kontrol (ComboBox, Button) veya Makro (VBA) EKLEYEMEZ. Kullanıcı "buton ekle" derse SADECE o hücreye "Çıkart" yazmak gibi görsel işlemler yap, ama metot uydurma (örn ws.add_button vs yoktur!).
-                - Bilmediğin openpyxl attribute'larını veya sınıflarını uydurma (hallucinate etme).
+                - Openpyxl HİÇBİR ZAMAN Excel dosyasına tıklanabilir bir buton, kontrol (ComboBox, Button) veya Makro (VBA) EKLEYEMEZ. Buton/Hesaplama isteği gelirse hücre içine excel formülü `=A1+B1` falan yaz.
+                - Bilmediğin openpyxl attribute'larını veya sınıflarını uydurma.
                 
                 DOSYA BİLGİSİ:
                 {context}
@@ -245,8 +245,9 @@ else:
                         st.rerun()
                         
                     except Exception as code_error:
-                        st.error("Kod çalıştırılırken bir hata oluştu.")
-                        err_msg = f"Sizin için yazdığım excel uzman kodunu çalıştırırken şu hatayı aldım:\n`{str(code_error)}`"
+                        hata_metni = str(code_error)
+                        st.error(f"⚠️ YAPAY ZEKA KODU YÜRÜTÜRKEN ÇÖKTÜ!\nHATA DETAYI: {hata_metni}")
+                        err_msg = f"Sizin için yazdığım excel uzman kodunu çalıştırırken şu hatayı aldım:\n`{hata_metni}`\nLütfen bu hatayı ve ne yapmak istediğinizi tekrar yazar mısınız?"
                         st.session_state["messages"].append({"role": "assistant", "content": err_msg, "code": code_string})
                         
                 except Exception as api_err:
