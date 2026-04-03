@@ -49,7 +49,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<h3 style='color: #047857; font-weight: bold;'>Not: Bu Uygulama İş Güvenliği Uzmanı Fatih AKDENİZ tarafından geliştirilmiştir.</h3>", unsafe_allow_html=True)
+st.markdown("<p style='color: black; font-size: 14px; font-weight: bold;'>Not: Bu Uygulama İş Güvenliği Uzmanı Fatih AKDENİZ tarafından geliştirilmiştir.</p>", unsafe_allow_html=True)
 
 # --- API KEY ALANI ---
 try:
